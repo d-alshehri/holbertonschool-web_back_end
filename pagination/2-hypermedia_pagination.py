@@ -22,28 +22,35 @@ def index_range(page: int, page_size: int) -> Tuple[int, int]:
         Tuple[int, int]: A tuple containing the start index
         and the end index for the page.
     """
-    start_index = (page - 1) * page_size
-    end_index = page * page_size
+    start_index: int = (page - 1) * page_size
+    end_index: int = page * page_size
     return start_index, end_index
 
 
 class Server:
     """Server class to paginate a database of popular baby names."""
-    DATA_FILE = "Popular_Baby_Names.csv"
 
-    def __init__(self):
-        self.__dataset = None
+    DATA_FILE: str = "Popular_Baby_Names.csv"
 
-    def dataset(self) -> List[List]:
-        """Cached dataset."""
+    def __init__(self) -> None:
+        """Initialize the Server with dataset cache."""
+        self.__dataset: List[List[Any]] = None
+
+    def dataset(self) -> List[List[Any]]:
+        """
+        Return the cached dataset loaded from the CSV file.
+
+        Returns:
+            List[List[Any]]: The dataset as a list of lists.
+        """
         if self.__dataset is None:
             with open(self.DATA_FILE) as f:
                 reader = csv.reader(f)
                 dataset = [row for row in reader]
-            self.__dataset = dataset[1:]  # skip header
+            self.__dataset = dataset[1:]  # skip header row
         return self.__dataset
 
-    def get_page(self, page: int = 1, page_size: int = 10) -> List[List]:
+    def get_page(self, page: int = 1, page_size: int = 10) -> List[List[Any]]:
         """
         Retrieve a page of the dataset.
 
@@ -52,13 +59,15 @@ class Server:
             page_size (int): The number of items per page, must be > 0.
 
         Returns:
-            List[List]: The requested page of data. Empty list if out of range.
+            List[List[Any]]: The requested page of data. Returns an empty list
+            if the page is out of range.
         """
         assert isinstance(page, int) and page > 0
         assert isinstance(page_size, int) and page_size > 0
 
         start, end = index_range(page, page_size)
         dataset = self.dataset()
+
         return dataset[start:end]
 
     def get_hyper(self, page: int = 1, page_size: int = 10) -> Dict[str, Any]:
@@ -71,12 +80,12 @@ class Server:
 
         Returns:
             Dict[str, Any]: A dictionary containing:
-                - page_size: the length of the returned dataset page
-                - page: the current page number
-                - data: the dataset page
-                - next_page: number of the next page, None if no next page
-                - prev_page: number of the previous page, None if no previous page
-                - total_pages: total number of pages
+                - page_size (int): The length of the returned dataset page.
+                - page (int): The current page number.
+                - data (List[List[Any]]): The dataset page.
+                - next_page (int or None): Number of the next page, None if no next page.
+                - prev_page (int or None): Number of the previous page, None if no previous page.
+                - total_pages (int): Total number of pages.
         """
         data = self.get_page(page, page_size)
         total_items = len(self.dataset())
@@ -88,5 +97,5 @@ class Server:
             "data": data,
             "next_page": page + 1 if page < total_pages else None,
             "prev_page": page - 1 if page > 1 else None,
-            "total_pages": total_pages
+            "total_pages": total_pages,
         }
