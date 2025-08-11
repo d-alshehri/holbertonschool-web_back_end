@@ -1,23 +1,27 @@
 #!/usr/bin/env python3
 """
-Deletion-resilient hypermedia pagination
+Deletion-resilient hypermedia pagination module.
+Provides the Server class which supports indexed pagination
+that is robust to deletions in the dataset.
 """
 
 import csv
-from typing import List, Dict
+from typing import List, Dict, Any
 
 
 class Server:
-    """Server class to paginate a database of popular baby names.
-    """
+    """Server class to paginate a database of popular baby names."""
     DATA_FILE = "Popular_Baby_Names.csv"
 
-    def __init__(self):
-        self.__dataset = None
-        self.__indexed_dataset = None
+    def __init__(self) -> None:
+        """Initialize the Server with dataset and indexed dataset cache."""
+        self.__dataset: List[List[Any]] = None
+        self.__indexed_dataset: Dict[int, List[Any]] = None
 
-    def dataset(self) -> List[List]:
-        """Cached dataset
+    def dataset(self) -> List[List[Any]]:
+        """
+        Return the cached dataset.
+        Loads the dataset from CSV if it has not been loaded yet.
         """
         if self.__dataset is None:
             with open(self.DATA_FILE) as f:
@@ -26,8 +30,10 @@ class Server:
             self.__dataset = dataset[1:]
         return self.__dataset
 
-    def indexed_dataset(self) -> Dict[int, List]:
-        """Dataset indexed by sorting position, starting at 0
+    def indexed_dataset(self) -> Dict[int, List[Any]]:
+        """
+        Return the dataset indexed by position starting at 0.
+        This index allows for deletion-resilient pagination.
         """
         if self.__indexed_dataset is None:
             dataset = self.dataset()
@@ -36,31 +42,38 @@ class Server:
             }
         return self.__indexed_dataset
 
-    def get_hyper_index(self, index: int = None, page_size: int = 10) -> Dict:
+    def get_hyper_index(self, index: int = None,
+                        page_size: int = 10) -> Dict[str, Any]:
         """
-        Return a dictionary with deletion-resilient pagination info:
-        - index: current start index
-        - next_index: index to query for next page
-        - page_size: number of items returned in current page
-        - data: actual page of dataset
+        Return a dictionary for deletion-resilient pagination.
+
+        Args:
+            index: The start index of the page (0-based).
+            page_size: The number of items per page.
+
+        Returns:
+            A dictionary containing:
+                - index: The start index of the current page
+                - next_index: The start index of the next page
+                - page_size: The number of items in the current page
+                - data: The actual page of data
         """
-        assert isinstance(index, int) and index >= 0
         indexed_data = self.indexed_dataset()
-        assert index < len(indexed_data)
+        assert index is not None and 0 <= index < len(indexed_data)
 
-        data = []
+        data: List[List[Any]] = []
         current_index = index
-        count = 0
 
-        while count < page_size and current_index < max(indexed_data.keys()) + 1:
+        while len(data) < page_size and current_index < len(indexed_data):
             if current_index in indexed_data:
                 data.append(indexed_data[current_index])
-                count += 1
             current_index += 1
+
+        next_index = current_index if current_index < len(indexed_data) else None
 
         return {
             "index": index,
             "data": data,
             "page_size": len(data),
-            "next_index": current_index
+            "next_index": next_index
         }
