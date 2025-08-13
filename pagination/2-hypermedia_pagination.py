@@ -1,8 +1,15 @@
 #!/usr/bin/env python3
-''' Hypermedia pagination '''
+"""Provides a function index_range"""
 import csv
 import math
-from typing import Dict, List, Tuple
+from typing import List, Dict
+
+
+def index_range(page: int, page_size) -> tuple:
+    """Returns pagination params into a list of data"""
+    limit = page * page_size
+    offset = (page - 1) * page_size
+    return (offset, limit)
 
 
 class Server:
@@ -25,36 +32,28 @@ class Server:
         return self.__dataset
 
     def get_page(self, page: int = 1, page_size: int = 10) -> List[List]:
-        ''' def get page '''
-        assert type(page_size) is int and type(page) is int
-        assert page > 0
-        assert page_size > 0
-        self.dataset()
-        i = index_range(page, page_size)
-        if i[0] >= len(self.__dataset):
-            return []
-        else:
-            return self.__dataset[i[0]:i[1]]
+        """ Returns a paginated data set according to params"""
+        assert (type(page) == int and page > 0)
+        assert (type(page_size) == int and page_size > 0)
+        offset, end = index_range(page, page_size)
+        return self.dataset()[offset:end]
 
     def get_hyper(self, page: int = 1, page_size: int = 10) -> Dict:
-        ''' Def get hyper '''
-        dataset_items = len(self.dataset())
-        data = self.get_page(page, page_size)
-        total_pages = math.ceil(dataset_items / page_size)
-
-        p = {
-            "page": page,
-            "page_size": page_size if page < total_pages else 0,
-            "data": data,
-            "next_page": page + 1 if page + 1 < total_pages else None,
-            "prev_page": page - 1 if page - 1 > 0 else None,
-            "total_pages": total_pages
-            }
-        return p
-
-
-def index_range(page: int, page_size: int) -> Tuple[int, int]:
-    ''' Def index range '''
-    index = page * page_size - page_size
-    index_1 = index + page_size
-    return (index, index_1)
+        """Returns a hypermedia data for api purpose"""
+        data_count = len(self.dataset())
+        hyper_data = {}
+        hyper_data["page_size"] = page_size
+        hyper_data["page"] = page
+        hyper_data["data"] = self.get_page(page, page_size)
+        next_offset, next_limit = index_range(page + 1, page_size)
+        try:
+            self.dataset()[next_offset]
+            hyper_data["next_page"] = page + 1
+        except IndexError:
+            hyper_data["next_page"] = None
+        if page > 2:
+            hyper_data["prev_page"] = page - 1
+        else:
+            hyper_data["prev_page"] = None
+        hyper_data["total_pages"] = int(data_count/page_size) + 1
+        return hyper_data
