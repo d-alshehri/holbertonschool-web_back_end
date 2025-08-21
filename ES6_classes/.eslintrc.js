@@ -18,6 +18,7 @@ module.exports = {
   },
   plugins: ['jest'],
   rules: {
+    'jest/no-large-snapshots': 'off',
     'max-classes-per-file': 'off',
     'no-underscore-dangle': 'off',
     'no-console': 'off',
