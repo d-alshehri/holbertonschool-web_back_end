@@ -1,5 +1,6 @@
 // 9-hoisting.js
 
+// HolbertonClass definition
 export class HolbertonClass {
     constructor(year, location) {
       this._year = year;
@@ -15,6 +16,7 @@ export class HolbertonClass {
     }
   }
   
+  // StudentHolberton definition
   export class StudentHolberton {
     constructor(firstName, lastName, holbertonClass) {
       this._firstName = firstName;
@@ -46,5 +48,6 @@ export class HolbertonClass {
   const student4 = new StudentHolberton('Donald', 'Bush', class2019);
   const student5 = new StudentHolberton('Jason', 'Sandler', class2019);
   
+  // Export the list of students as a named export
   export const listOfStudents = [student1, student2, student3, student4, student5];
   
