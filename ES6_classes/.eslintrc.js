@@ -7,5 +7,6 @@ module.exports = {
     'airbnb-base',
   ],
   rules: {
+      'no-underscore-dangle': ['error', { allow: ['_maxStudentsSize'] }],
   },
 };
