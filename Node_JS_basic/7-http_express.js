@@ -3,19 +3,16 @@ const fs = require('fs').promises;
 
 const database = process.argv[2];
 
-/**
- * Reads the CSV database asynchronously and returns formatted student info
- */
 async function getStudentsInfo(path) {
   try {
     const content = await fs.readFile(path, 'utf8');
-    const lines = content.split('\n').filter((line) => line.trim() !== '');
+    const lines = content.split('\n').filter(line => line.trim() !== '');
     const rows = lines.slice(1); // skip header
 
-    let output = `Number of students: ${rows.length}\n`;
+    let output = `Number of students: ${rows.length}`;
 
     const byField = {};
-    rows.forEach((row) => {
+    rows.forEach(row => {
       const cols = row.split(',');
       if (cols.length >= 4) {
         const firstName = cols[0].trim();
@@ -25,8 +22,8 @@ async function getStudentsInfo(path) {
       }
     });
 
-    Object.keys(byField).sort().forEach((field) => {
-      output += `Number of students in ${field}: ${byField[field].length}. List: ${byField[field].join(', ')}\n`;
+    Object.keys(byField).sort().forEach(field => {
+      output += `\nNumber of students in ${field}: ${byField[field].length}. List: ${byField[field].join(', ')}`;
     });
 
     return output;
