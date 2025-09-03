@@ -3,49 +3,49 @@ const fs = require('fs').promises;
 
 const database = process.argv[2];
 
-const app = express();
-
-async function countStudents(path) {
+/**
+ * Reads the CSV database asynchronously and returns formatted student info
+ */
+async function getStudentsInfo(path) {
   try {
-    const data = await fs.readFile(path, 'utf8');
-    const lines = data.split('\n').filter(line => line.trim() !== '');
-    const students = lines.slice(1); // skip header
-    const fields = {};
+    const content = await fs.readFile(path, 'utf8');
+    const lines = content.split('\n').filter((line) => line.trim() !== '');
+    const rows = lines.slice(1); // skip header
 
-    students.forEach(line => {
-      const parts = line.split(',');
-      if (parts.length >= 4) {
-        const name = parts[0].trim();
-        const field = parts[3].trim();
-        if (!fields[field]) fields[field] = [];
-        fields[field].push(name);
+    let output = `Number of students: ${rows.length}\n`;
+
+    const byField = {};
+    rows.forEach((row) => {
+      const cols = row.split(',');
+      if (cols.length >= 4) {
+        const firstName = cols[0].trim();
+        const field = cols[3].trim();
+        if (!byField[field]) byField[field] = [];
+        byField[field].push(firstName);
       }
     });
 
-    let result = `Number of students: ${students.length}`;
-    Object.keys(fields).sort().forEach(field => {
-      result += `\nNumber of students in ${field}: ${fields[field].length}. List: ${fields[field].join(', ')}`;
+    Object.keys(byField).sort().forEach((field) => {
+      output += `Number of students in ${field}: ${byField[field].length}. List: ${byField[field].join(', ')}\n`;
     });
 
-    return result;
-  } catch {
+    return output;
+  } catch (err) {
     throw new Error('Cannot load the database');
   }
 }
 
-// / route
+const app = express();
+
 app.get('/', (req, res) => {
-  res.set('Content-Type', 'text/plain');
   res.send('Hello Holberton School!');
 });
 
-// /students route
 app.get('/students', async (req, res) => {
-  res.set('Content-Type', 'text/plain');
-  let output = 'This is the list of our students';
+  let output = 'This is the list of our students\n';
   try {
-    const info = await countStudents(database);
-    output += `\n${info}`;
+    const info = await getStudentsInfo(database);
+    output += info;
     res.send(output);
   } catch (err) {
     res.status(500).send(err.message);
