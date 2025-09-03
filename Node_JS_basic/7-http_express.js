@@ -3,6 +3,8 @@ const fs = require('fs').promises;
 
 const database = process.argv[2];
 
+const app = express();
+
 async function getStudentsInfo(path) {
   try {
     const content = await fs.readFile(path, 'utf8');
@@ -32,23 +34,26 @@ async function getStudentsInfo(path) {
   }
 }
 
-const app = express();
-
+// Route for /
 app.get('/', (req, res) => {
+  res.set('Content-Type', 'text/plain');
   res.send('Hello Holberton School!');
 });
 
+// Route for /students
 app.get('/students', async (req, res) => {
-  let output = 'This is the list of our students\n';
+  res.set('Content-Type', 'text/plain');
+  let output = 'This is the list of our students';
   try {
     const info = await getStudentsInfo(database);
-    output += info;
+    output += `\n${info}`;
     res.send(output);
   } catch (err) {
-    res.status(500).send(err.message);
+    res.status(500).send('Cannot load the database');
   }
 });
 
+// Listen on port 1245
 app.listen(1245);
 
 module.exports = app;
